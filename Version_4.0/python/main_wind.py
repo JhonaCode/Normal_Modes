@@ -32,7 +32,9 @@ import Parameters_clim   as cl
 ####################################################
 
 
-color='ocean_r'
+#color='ocean_r'
+#color='gist_ncar'
+color='YlGnBu'
 
 lonw=-150+360
 lone=-20+360
@@ -56,12 +58,12 @@ date  = '2024-04-01T15:00'
 name  = 'uvel_'
 
 #"""
-ma.cartopy_plot(cl.era5_c,varname='uvel',lat=lats,lon=lons, lev=lev,date_str=date,bcolor=[0,50,6],color=color,units='[m/s]',figname=name+'era5',plotname=label  , show=False)
+ma.cartopy_plot(cl.era5_c,varname='uvel',lat=lats,lon=lons, lev=lev,date_str=date,bcolor=[0,50,6],color=color,units='[m$^{-1}$]',figname=name+'era5',plotname=label  , show=False)
 
 lev   =850
 label = f"ERA5 Mean Meridional Wind, \n Level {lev} [hPa] for APRIL 2024"
 name  = 'vvel_'
-ma.cartopy_plot(cl.era5_c,varname='vvel',lat=lats,lon=lons, lev=lev,date_str=date,bcolor=[-3,3,6],color=color,units='[m/s]',figname=name+'era5',plotname=label  , show=False)
+ma.cartopy_plot(cl.era5_c,varname='vvel',lat=lats,lon=lons, lev=lev,date_str=date,bcolor=[-3,3,6],color=color,units=r'[m$^{-1}$]',figname=name+'era5',plotname=label  , show=False)
 
 #"""
 

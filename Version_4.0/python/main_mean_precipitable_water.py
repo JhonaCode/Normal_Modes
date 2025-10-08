@@ -41,8 +41,9 @@ lone=-20+360
 lats=-45
 latn=-15
 
-color='ocean_r'
-#color='gist_earth'
+#color='ocean_r'
+#color='gist_ncar'
+color='YlGnBu'
 
 lats=[-55,-15,6]
 lons=[-90+360,-30+360,5]
@@ -82,13 +83,13 @@ mean=fnc.mean(prec,vars,dates,var2=var2,lats=lats,lons=lons)
 
 
 label = f"ERA5  Mean Precipitable Water, \n from 00Z23APR2024 to 00Z04MAY2024"
-ma.cartopy_plot(mean[0],bcolor=[0,60,6],color=color,units='[kgm$^{-2}$]',figname=name+'era5'  ,plotname=label , show=False)
+ma.cartopy_plot(mean[0],bcolor=[0,50,6],color=color,units='[kgm$^{-2}$]',figname=name+'era5'  ,plotname=label , show=False)
 
 label = f"BAMHY Mean Precipitable Water, \n from 00Z23APR2024 to 00Z04MAY2024"
-ma.cartopy_plot(mean[1],bcolor=[0,60,6],color=color,units='[kgm$^{-2}$]',figname=name+'bam'   ,plotname=label , show=False)
+ma.cartopy_plot(mean[1],bcolor=[0,50,6],color=color,units='[kgm$^{-2}$]',figname=name+'bam'   ,plotname=label , show=False)
 
 label = f"MONAN Mean Precipitable Water, \n from 00Z23APR2024 to 00Z04MAY2024"
-ma.cartopy_plot(mean[2],bcolor=[0,60,6],color=color,units='[kgm$^{-2}$]',figname=name+'monan' ,plotname=label  , show=False)
+ma.cartopy_plot(mean[2],bcolor=[0,50,6],color=color,units='[kgm$^{-2}$]',figname=name+'monan' ,plotname=label  , show=False)
 
 plt.show()
 

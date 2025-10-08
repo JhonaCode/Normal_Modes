@@ -41,7 +41,8 @@ lone=-20+360
 lats=-45
 latn=-15
 
-color='ocean_r'
+#color='ocean_r'
+color='YlGnBu'
 
 lats=[-40,-15,6]
 lons=[-90+360,-30+360,5]

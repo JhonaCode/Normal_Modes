@@ -1,7 +1,6 @@
 import os
 from types import SimpleNamespace
 
-dirv40='/home/paulo.bonatti/Modal_Energetics/Version_4.0'
 
 def trying(args,default,arg):
 
@@ -19,20 +18,20 @@ def csdata(args=None):
         "caso": "ERA_5",
         "epoca": 37,
         "csst": "RainRS",
+        "dirv40": '../../',
         "op": 3,
     }   
 
-    caso =trying(args,defaults,'caso')
-    epoca=trying(args,defaults,'epoca')
-    csst =trying(args,defaults,'csst')
-    op   =trying(args,defaults,'op')
-
+    caso    =trying(args,defaults,'caso')
+    epoca   =trying(args,defaults,'epoca')
+    csst    =trying(args,defaults,'csst')
+    op      =trying(args,defaults,'op')
+    dirv40  =trying(args,defaults,'dirv40')
 
     if (op==3):
       dirg=dirv40+'/Config/'
     
     print( 'caso=',caso,'epoca=',epoca,'csst=',csst,'dirg=',dirg,'op =',op )
-
     
     #* Getting dirdinp to input the data
     #filedir=dirg+'Config_Dir'
@@ -62,11 +61,10 @@ def csdata(args=None):
         lines = f.readlines()
 
     # Parse csvm and Kmax
-    lrec = lines[1].strip()
+    lrec = lines[0].strip()
     csvm = lrec[5:10]   # equivalent to substr(lrec,6,5)
+    lrec = lines[1].strip()
     Kmax = lrec[5:7]    # equivalent to substr(lrec,6,2)
-
-
 
     #number of dates 
     ne = check_epoca(dirg, caso, csst,epoca)
@@ -117,25 +115,24 @@ def csdata(args=None):
 
     print(f"✅ Case_Dates.dgs written to {outfile}")
 
+    zmap = {
+        0: (z0a, z0b),
+        1: (z1a, z1b),
+        2: (z2a, z2b),
+        3: (z3a, z3b),
+        4: (z4a, z4b),
+    }
+
     out=SimpleNamespace(
-         Kmax  =Kmax,
-         datei =datei, 
-         datef =datef,
-         prev  = prev,
-         csvm  = csvm,
-         caso  = caso,
-         lonc  = lonc,
-         latc  = latc,
-         z0a   =  z0a,
-         z0b   =  z0b,
-         z1a   =  z1a,
-         z1b   =  z1b,
-         z2a   =  z2a,
-         z2b   =  z2b,
-         z3a   =  z3a,
-         z3b   =  z3b,
-         z4a   =  z4a,
-         z4b   =  z4b,
+         Kmax   = Kmax,
+         datei  = datei, 
+         datef  = datef,
+         prev   = prev,
+         csvm   = csvm,
+         caso   = caso,
+         lonc   = lonc,
+         latc   = latc,
+         zmap   = zmap,
         )
 
     return out 

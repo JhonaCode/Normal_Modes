@@ -16,6 +16,13 @@ projection=ccrs.PlateCarree(central_longitude=180.0, globe=None)
 #skip poitnt in vector plot
 npp=10
 
+temporal={
+          'plotdef':'temporal',
+          'wf'     :0.7,
+          'hf'     :0.5,
+          'cmmais' :0.0,
+          }
+
 egeon='/pesq'
 
 path='/home/jhonatan.aguirre/Modal_Energetics/Version_4.0/document/figs'

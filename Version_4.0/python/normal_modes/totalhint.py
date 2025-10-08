@@ -17,7 +17,7 @@ import normal_modes.Cross_Section  as CS
 import normal_modes.Get_Player     as GP
 
 #####Tenmq uye trovar ir ler diteramente
-VDout ='/pesq/dados/bam/paulo.bonatti/Modal_Energetics/Version_4.0/Vertical_Decomposition/dataout'
+VDout ='/pesq/dados/bam/paulo.bonatti/Modal_Energetics/Version_4.0/Horizontal_Decomposition/dataout'
 VMout ='/pesq/dados/bam/paulo.bonatti/Modal_Energetics/Version_4.0/Vertical_Modes/dataout'
 dirv40='/home/paulo.bonatti/Modal_Energetics/Version_4.0'
 fig_out   =''
@@ -42,13 +42,15 @@ def arguments(args=None):
 
     parser = argparse.ArgumentParser(
         description=(
-        "Plots the Total Energy of the Vertical Modes the Classes 0 to 4\n\n"
+        " Plots the Total Energy of the Horizontal Modes the Classes 0 to 4\n\n"
         "Usage:\n"
-        "  totalv [cs] [caso] [epoca] [csst] [area] [perc] [xsec] [cnt]\n\n"
+        "  totalhint [wa] [wb] [cs] [caso] [epoca] [csst] [area] [perc] [xsec] [cnt]\n\n"
         "Default:\n"
-        "  cs=0 ; caso=ERA_5 ; epoca=37 ; csst=RainRS\n"
+        "  wa=rb; wb=kv ; cs=0 ; caso=ERA_5 ; epoca=37 ; csst=RainRS'\n"
         "  area=local ; perc=Perc ; xsec=no ; cnt=0\n\n"
         "Arguments meaning:\n"
+        "  wa    : horizontal mode (rb, kv, mx, gw or ge)\n"
+        "  wb    : horizontal mode (rb, kv, mx, gw or ge)\n"
         "  cs    : vertical mode (0, 1, 2, 3 or 4)\n"
         "  caso  : five letters identifying the case\n"
         "  epoca : number identifying the datei and datef\n"
@@ -64,6 +66,8 @@ def arguments(args=None):
 
     # Default values
     defaults = {
+        "wa"   : 'rb',
+        "wb"   : 'kv',
         "cs"   : 0,
         "caso" : "ERA_5",
         "epoca": 37,
@@ -75,6 +79,7 @@ def arguments(args=None):
         "color": 'ocean_r',
         "show" : True,
         "bcolor" : [],
+        "fmt"  : '%.1f',
     }
 
     """
@@ -84,13 +89,15 @@ def arguments(args=None):
     # Now you can access the variables
     dirhome=folders["dirhome"]
     dirdata=folders["dirdata"]
-    dirdinp=folders["dirdinp"]
+    dirdinp=folders["digfggdinp"]
     """
 
     # If nothing passed → just return defaults
     if not args:
         return defaults
 
+    wa   =CD.trying(args,defaults,'wa')
+    wb   =CD.trying(args,defaults,'wb')
     cs   =CD.trying(args,defaults,'cs')
     caso =CD.trying(args,defaults,'caso')
     epoca=CD.trying(args,defaults,'epoca')
@@ -102,6 +109,7 @@ def arguments(args=None):
     color=CD.trying(args,defaults,'color')
     bcolor=CD.trying(args,defaults,'bcolor')
     show =CD.trying(args,defaults,'show')
+    fmt  =CD.trying(args,defaults,'fmt')
 
 
     # GrADS logic: if perc != 'Perc', force Ener
@@ -109,7 +117,8 @@ def arguments(args=None):
         perc = "Ener"
 
     # Print parsed values (like `say` in GrADS)
-    print(cs, caso, epoca, csst, area, perc, xsec, cnt)
+    print('wa=',wa ,'wb=',wb, 'cs=',cs ,'caso=',caso, 'epoca=',epoca, 'csst=',csst, 'area=',area, 'perc=',perc, 'xsec=',xsec, 'cnt=',cnt)
+
 
     # Placeholder for chkmdls()
     rec = chkmdls()
@@ -170,19 +179,27 @@ def arguments(args=None):
     else:
         titb='3 Days Forecast: '#+tit
     
-    filea='ENEC'+caso+csst+csd.datei+csd.datef+csd.prev+trunc+'.ctl'
+    
+    filea='ENCL'+caso+csst+csd.datei+csd.datef+csd.prev+trunc+'.ctl'
     fileh='Vertical_Functions_'+caso+'.L0'+str(Kmax)+'.ctl'
+
 
     lats=[float(ah.LatS),float(ah.LatN),6]#float(ah.LatC)]
     lons=[float(ah.LonW),float(ah.LonE),6]#float(ah.LonC)]
 
-    exp_name='Vertical_Decomposition'
+    exp_name='Horizontal_Decomposition'
     fileg=VDout+'/'+filea
     vd = down.open_grads(fileg,exp_name)
-    
-    exp_name='Vertical_Modes'
+
+    #print(vd.variables)
+    #exit()
+
+    exp_name='Horizontal_Modes'
     fileg=VMout+'/'+fileh
     vm = down.open_grads(fileg,exp_name)
+
+    #print(vm.variables)
+
 
     zmap=csd.zmap[cs]
 
@@ -195,7 +212,6 @@ def arguments(args=None):
         b2=np.max(var[:])
         bn=5
 
-
     levels= np.linspace(b1,b2,bn,endpoint=True)
     dco=levels[1]-levels[0]
 
@@ -203,38 +219,53 @@ def arguments(args=None):
     hb=GP.gethn(zmap[1],vm)
     za=int(zmap[0])-1
     zb=int(zmap[1])-1
-  
-    var=getattr(vd,f"etn{cs}")
+
+    wave_map = {
+    'rb': 'Rossby',
+    'kv': 'Kelvin',
+    'mx': 'Mixed',
+    'gw': 'GravW',
+    'ge': 'GravE'
+    }
+    
+    Wavea = wave_map.get(wa, 'Unknown')
+    Waveb = wave_map.get(wb, 'Unknown')
+
+    var= getattr(vd,f"et{wa}{wb}{cs}")
 
     if perc=="Perc":
 
         fga   ='Ener_Perc'
-        var   = var/vd.ett*100
-        tita  ='Vertical Energy Percentage'
-        #label =f"{caso} {tita}\n {titb} \n Class {cs}: H{za}={ha} to H {zb}={hb}"
+        tita  =Wavea+'-'+Waveb+' Horizontal Energy Percentage'
         label =f"{caso} {tita}\n Class {cs}: H{za}={ha} to H{zb}={hb}"
-        name  =f"{fga}_Class_{cs}_Total_{area}_{caso}_{csst}_{dateg}_{trunc}"
+        name  =f"{fga}_Class_{cs}_{wa}_{wb}_Total_{area}_{caso}_{csst}_{dateg}_{trunc}"
+    
+        ett=0
+        for i in range(0,5):
+
+            ets=getattr(vd,f"etnsum{i}")
+            ett=ets+ett
+
+        var=100*var/ett
 
         units='[%]'
 
         ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units}"
         
-        #ma.cartopy_plot(var,lat=lats,lon=lons,color=color,bcolor=bcolor,units='[%]',figname=name,plotname=label  , show=show)
         ma.countour_plot(var,lat=lats,lon=lons,color=color,bcolor=bcolor,units=units,figname=name,plotname=label ,xtitle=ct , show=show)
         
     else:
-        fga   ='Ener'
-        var   = var/1000
-        tita  ='Vertical Energy'
-        #label =f"{caso} {tita}\n {titb} \n Class {cs}: H{za}={ha} to H {zb}={hb}"
+        fga   ='Energy'
+        etw   =var/1000
+        tita  =Wavea+'-'+Waveb+' Horizontal Energy'
         label =f"{caso} {tita} \n Class {cs}: H{za}={ha} to H {zb}={hb}"
-        name  =f"{fga}_Class_{cs}_Total_{area}_{caso}_{csst}_{dateg}_{trunc}"
+        name  =f"{fga}_Class_{cs}_{wa}_{wb}_Total_{area}_{caso}_{csst}_{dateg}_{trunc}"
 
         units='[kJ/kg]'
 
-        ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units}"
+        ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:{fmt}} {units}"
         
-        ma.countour_plot(var,lat=lats,lon=lons,color=color,bcolor=bcolor,units=units,figname=name,plotname=label ,xtitle=ct , show=show)
+        ma.countour_plot(var/1000.0,lat=lats,lon=lons,color=color,bcolor=bcolor,units=units,figname=name,plotname=label ,xtitle=ct , show=show,fmt=fmt)
         
      
     out=SimpleNamespace(
@@ -252,15 +283,8 @@ def arguments(args=None):
         datef=str(csd.datef),
         csvm =str(csd.csvm),
         prev =str(csd.prev),
-        #zca  =str(csd.zca),
-        #zcb  =str(csd.zcb),
         za    =str(za),
         zb    =str(zb),
-        #Center=str(ah.Center),
-        #LonW  =str(ah.LonW),
-        #LonE  =str(ah.LonE),
-        #LatN  =str(ah.LatN),
-        #LatS  =str(ah.LatS),
         lats=lats,
         lons=lons,
         fileh=fileh,
@@ -269,16 +293,6 @@ def arguments(args=None):
         tit=tit
         )
 
-    #return {
-    #    "cs": cs,
-    #    "caso": caso,
-    #    "epoca": epoca,
-    #    "csst": csst,
-    #    "area": area,
-    #    "perc": perc,
-    #    "xsec": xsec,
-    #    "cnt": cnt,
-    #}
     return out
 
 def chkmdls():
