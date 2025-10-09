@@ -19,12 +19,12 @@ import normal_modes.PressLayer     as PL
 import normal_modes.Get_Player     as GP
 
 #####Tenmq uye trovar ir ler diteramente
-VDout ='/pesq/dados/bam/paulo.bonatti/Modal_Energetics/Version_4.0/Interaction_Horizontal_Vertical/dataout'
+VDout ='/pesq/dados/bam/paulo.bonatti/Modal_Energetics/Version_4.0/Hor_Ver_Recomposition/dataout'
 VMout ='/pesq/dados/bam/paulo.bonatti/Modal_Energetics/Version_4.0/Vertical_Modes/dataout'
 dirv40='/home/paulo.bonatti/Modal_Energetics/Version_4.0'
 fig_out   =''
 
-def totalhvint(args=None):
+def totalrc(args=None):
     """
     Parameters
     ----------
@@ -46,21 +46,16 @@ def totalhvint(args=None):
         description=(
         "Plots the Total Energy of the Vertical Modes the Classes 0 to 4\n\n"
         "Usage:\n"
-        "  totalv [var] [atm] [caso] [epoca] [csst] [area] [perc] [xsec] [cnt]\n\n"
+        "  totalrc  [caso] [epoca] [csst] [lev] [magwind]\n\n"
         "Default:\n"
-        "  var=rbkv01 ;  atm=ht; epoca=37 ; csst=RainRS\n"
-        "  area=local ; perc=Perc ; xsec=no ; cnt=0\n\n"
+        "  caso=ERA_5 ;  epoca=37  ; csst=RainRS\n"
+        "  lev =500   ;  magwind=6 \n"
         "Arguments meaning:\n"
-        "var : (wawbcaca) define the field to be plotted waves a and b, classes a and b"
-        "  atm : ht for high troposphere or ct for medium troposphere'\n"
-        "        or bt for botton troposphere'\n"
         "  caso  : five letters identifying the case\n"
         "  epoca : number identifying the datei and datef\n"
         "  csst  : six letters identifying the case study\n"
-        "  area  : local for fixed area or global for full domain\n"
-        "  perc  : Ener to plot energy or Perc to plot percentage\n"
-        "  xsec  : yes to mark cross-section points, no otherwise\n"
-        "  cnt   : lines interval\n"
+        "     lv : pressure level\n"
+        "magwind : reference value for wind magnitude \n"
     ),
     formatter_class=argparse.RawTextHelpFormatter  # preserve line breaks
     )
@@ -68,20 +63,21 @@ def totalhvint(args=None):
 
     # Default values
     defaults = {
-        "var"   : "rbkv01",
         "caso"  : "ERA_5",
-        "atm"   : "ht",
         "epoca" : 37,
         "csst"  : "RainRS",
-        "ht"    : "ht",
-        "area"  : "local",
-        "perc"  : "Perc",
-        "xsec"  : "no",
-        "cnt"   : 0,
+        "lev"   : 500,
+        "scale" : 100,
+        "width" : 0.0025,
+        "headlength" : 0.05,
+        "magwind":6,
         "color" : 'ocean_r',
         "show"  : True,
-        "bcolor" : [],
-        "fmt"  : '.1f',
+        "bcolor": [],
+        "lats": [],
+        "lons": [],
+        "fmt"   : '.1f',
+        "units" : [],
     }
 
     """
@@ -98,37 +94,25 @@ def totalhvint(args=None):
     if not args:
         return defaults
 
-
-    var     =CD.trying(args,defaults,'var')
-    atm     =CD.trying(args,defaults,'atm')
     caso    =CD.trying(args,defaults,'caso')
     epoca   =CD.trying(args,defaults,'epoca')
     csst    =CD.trying(args,defaults,'csst')
-    area    =CD.trying(args,defaults,'area')
-    perc    =CD.trying(args,defaults,'perc')
-    xsec    =CD.trying(args,defaults,'xsec')
-    cnt     =CD.trying(args,defaults,'cnt')
+    lev     =CD.trying(args,defaults,'lev')
+    magwind =CD.trying(args,defaults,'magwind')
     color   =CD.trying(args,defaults,'color')
     bcolor  =CD.trying(args,defaults,'bcolor')
+    headlength  =CD.trying(args,defaults,'headlength')
+    width  =CD.trying(args,defaults,'width')
+    scale  =CD.trying(args,defaults,'scale')
+    lons    =CD.trying(args,defaults,'lons')
+    lats    =CD.trying(args,defaults,'lats')
     show    =CD.trying(args,defaults,'show')
-
     fmt     =CD.trying(args,defaults,'fmt')
-
-    #obtained from the variable
-    wa=var[0:2]
-    wb=var[2:4]
-    ca=var[4]
-    cb=var[5]
-
-
-    # GrADS logic: if perc != 'Perc', force Ener
-    if perc != "Perc":
-        perc = "Ener"
+    units   =CD.trying(args,defaults,'units')
 
     # Print parsed values (like `say` in GrADS)
-    print(f"var={var}, atm={atm}")
     print(f"caso={caso}, epoca={epoca}, csst={csst}")
-    print(f"area={area}, perc={perc}, xsec={xsec}, cnt={cnt}")
+    print(f"lev={lev}, magwind={magwind}")
     print(f"color={color}, bcolor={bcolor},  show={show}")
 
     # Placeholder for chkmdls()
@@ -151,75 +135,37 @@ def totalhvint(args=None):
             }
 
     csd=CD.csdata(arg_cs)
-    ############################################################    
 
+    ca=0
+    cb=1
     za, zb = csd.zmap[int(ca)]
     zc, zd = csd.zmap[int(cb)]
-
-    print("za=",za)
-    print("zb=",zb)
-    ############################################################    
-
+    ##########################################################
     rh =RB.get_Rhomb_Resol(args={'Mmax':Mmax,'resdir':1})
 
     trunc=rh.Rhomb+'L0'+str(Kmax)
 
     ############################################################    
 
-    args_ah={'area':area,
-           'Mmax':Mmax,
-           'csst':csst
-           }
+    cx=csst[4:6] 
 
-    #Get AREA HIGHLIGHT
-    ah=AH.get_area_highlight(args_ah)
-
-    print(ah)
-
-    ############################################################    
-
-    xsec='yes'
-    if (xsec=='yes'): 
-
-        #Get Cross Section 
-        crs=CS.get_cross_section(args={'csst':csst})
-        print(crs)
+    if (cx== 'RS'):
+      exta='S003_S003_H00_H04'
+      extb='S001_S001_H00_H04'
+    if (cx== 'SS'):
+      exta='S004_S004_H00_H04'
+      extb='S001_S001_H05_H10'
+    
 
     ############################################################    
 
     #time
-    #now = datetime.now()
-    #dateg = now.strftime("%Y%m%d%H")   # like "202510011530"
-    #print("dateg =", dateg)
     now = datetime.now()
-    dateg = now.strftime("%Y%m%d%H")   # like "202510011530"
-
+    dateg = now.strftime("%Y%m%d")   # like "202510011530"
 
     ############################################################    
-    #Get Pressure Layers
-
-    pl=PL.PressLayer(args={'dirv40':dirv40,'op':1,'atm':atm})
-
-    pfa=pl[atm]['pk1']
-    pfb=pl[atm]['pk2']
-
-    wave_map = {
-    'rb': 'Rossby',
-    'kv': 'Kelvin',
-    'mx': 'Mixed',
-    'gw': 'GravW',
-    'ge': 'GravE'
-    }
-    
-    Wave1 = wave_map.get(wa, 'Unknown')
-    Wave2 = wave_map.get(wb, 'Unknown')
-
-    cas=wa+'_C'+ca+'_'+wb+'_C'+cb
-    CAS=Wave1+'_C'+ca+'_'+Wave2+'_C'+cb
-    print('cas=',cas)
 
     date_format = '%Y%m%d%H'
-
     dateit=datetime.strptime(csd.datei, date_format)
     dateft=datetime.strptime(csd.datef, date_format)
     date_format = '%H%d%Y%b'
@@ -227,21 +173,30 @@ def totalhvint(args=None):
     datefz=datetime.strftime(dateft, date_format)
     date_format = '%HZ%d%b%Y'
 
-
     ############################################################    
 
-    filea='INHV'+caso+csst+csd.datei+csd.datef+csd.prev+trunc+'.ctl'
-    fileh='Vertical_Functions_'+csd.csvm+'.L0'+str(Kmax)+'.ctl'
+    filea='UVHS'+caso+csst+csd.datei+csd.datef+csd.prev+trunc+'_'+exta+'.ctl'
+    fileb='UVHS'+caso+csst+csd.datei+csd.datef+csd.prev+trunc+'_'+extb+'.ctl'
 
-    exp_name='Energetic_Iteraction_'
+    exp_name=''
     fileg=VDout+'/'+filea
-    vd = down.open_grads(fileg,exp_name)
-
-    tosum = vd.sel(lev=slice(pfa, pfb)) 
+    v1r = down.open_grads(fileg,exp_name)
+    v1  = v1r.sel(lev=lev) 
     
-    exp_name='Vertical_Modes'
-    fileg=VMout+'/'+fileh
-    vm = down.open_grads(fileg,exp_name)
+    exp_name=''
+    fileg=VDout+'/'+fileb
+    v2r = down.open_grads(fileg,exp_name)
+    v2  = v2r.sel(lev=lev) 
+
+    if (cx=='RS'):
+        htt=v1.hrb+v2.hkv+v2.hmx
+        utt=v1.urb+v2.ukv+v2.umx
+        vtt=v1.vrb+v2.vkv+v2.vmx
+
+    if (cx=='SS'):
+        htt=v1.hrb+v2.hkv
+        utt=v1.urb+v2.ukv
+        vtt=v1.vrb+v2.vkv
 
     if bcolor:
         b1=bcolor[0]
@@ -256,62 +211,46 @@ def totalhvint(args=None):
     #levels= np.arange(b1,b2,bn)
     dco=levels[1]-levels[0]
 
-    if (perc == 'Perc'):
-        tita    =f"Hor-Ver Int. Percentage" 
-        fga     ='Energy_Int_Perc'
-        units   ='[%]'
-        ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:{fmt}} {units}"
-        suma=0
-        for i in range(0,5): 
-            print(f'ewv{i}')
-            ett          =getattr(tosum,f'ewv{i}')
-            vertical_sum =ett.sum(dim="lev")
-            suma         =suma+vertical_sum
+    units='[hpa]'
+    ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:{fmt}} {units}"
 
-        et      =getattr(tosum,f'e{var}')
-        etca    =100*et.sum(dim="lev")/suma
-        #etca    =100*tosum.etc1.sum(dim="lev")/suma
-    else:
-        tita    =f"Hor-Ver Energy Int." 
-        fga='Energy_Interaction'
-        units='[kJ/kg]'
-        ct=f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units}"
-        et=getattr(tosum,f'e{var}')
-        etca=et.sum(dim="lev")/1000.0
+    ha='9746.3'
+    hb='641.4'
+    hc='434.5'
+    hd='125.1'
+    za='00'
+    zb='04'
+    zc='05'
+    zd='10'
 
-
-    ha=GP.gethn(za,vm)
-    hb=GP.gethn(zb,vm)
-    hc=GP.gethn(zc,vm)
-    hd=GP.gethn(zd,vm)
-    na=za-1
-    nb=zb-1
-    nc=zc-1
-    nd=zd-1
-
-    #dateg=vm.time[0]#.values
-    #dateg = pd.to_datetime(dateg.values).strftime("%Y%m%d%H")
-    #print(dateg)
-
-    tr ='Case Study:'+csst+ah.Center+'-'+trunc
-    tit='Data for '+dateg
+    if (cx=='RS'):
+        xla='Rb:S3 MX_KV:S1 C0'
+        xlb='Class 0: H'+za+'='+ha+' to H'+zb+'='+hb
+        fg ='RbS3_MxKvS1_C0'
+        Center='(53.3W,29.4S)'
+    if (cx=='SS'):
+        xla='Rb:S4_C0 KV:S1_C1'
+        xlb='RbS4C0: H'+za+'='+ha+'-H'+zb+'='+hb+' KvS1C1: H'+zc+'='+hc+'-H'+zc+'='+hc
+        fg='RbS4C0_KvS1C1'
+        Center='(45.8W,23.6S)'
     
-    if (caso=='ERA_5'):
-        titb='Analysis: '#+tit
-    else:
-        titb='3 Days Forecast: '#+tit
+    cf=csst[0:4]
+    tcs = 'Monthly Mean: ' if cf == 'Clim' else tcs
+    tcs = 'Date: ' if cf == 'Rain' else tcs
 
 
-    #tita=f"{tita}\n {titb} Levels:{pfa:.1f}-{pfb:.1f} hPa \nClass {ca}:H{na}={ha} to H{nb}={hb}\nClass {cb}:H{nc}={hc} to H{nd}={hd}"
-    tita=f"{caso} {tita} {CAS}\n Levels:{pfa:.1f}-{pfb:.1f} hPa "
-    lclas=f"C{ca}:H{na}={ha} to H{nb}={hb}, C{cb}:H{nc}={hc} to H{nd}={hd}"
-    label=f"{fga}_{cas}_{atm}_{caso}_{csst}_{dateg}_{trunc}"
-    xlabel=f"{lclas}\n{ct}"
+    tita= f"{caso} {csst}\n Wind and Geopotential Height {tcs} Level={lev} [hPa]" 
+    xlabel= f"{ct} - {cx}: {Center}"
 
-    lats=[float(ah.LatS),float(ah.LatN),6]
-    lons=[float(ah.LonW),float(ah.LonE),6]
+    figname=f"Wind_Geop_Height_Triplet_{fg}_Total_{caso}_{csst}_{dateg}_{lev}_hPa"
 
-    ma.countour_plot(etca,lat=lats,lon=lons,color=color,bcolor=bcolor,units=units,figname=label,xtitle=xlabel,plotname=tita  , show=show,fmt=fmt)
+    #print(tita)
+    #print(xlabel)
+    #print(figname)
+
+    #ma.countour_plot(htt,lat=lats,lon=lons,color=color,bcolor=bcolor,units=units,figname=figname,xtitle=xlabel,plotname=tita  , show=show,fmt=fmt)
+    ma.cartopy_vector(utt,vtt,v1,data2=htt,scale=scale, width=width,lat=lats,lon=lons,color=color,bcolor=bcolor,figname=figname,plotname=tita,magwind=magwind,xtitle=xlabel ,cbar=False ,units=units, show=show,fmt=fmt,headlength=headlength,save=True)
+
 
     return
 
