@@ -3,6 +3,8 @@ import  argparse
 import  subprocess
 import  numpy as np
 from    types import SimpleNamespace
+import pandas as pd
+import xarray as xr
 #to get time
 from    datetime import datetime
 # Function with the definition of differents projetions
@@ -17,7 +19,8 @@ import normal_modes.Cross_Section  as CS
 import normal_modes.Get_Player     as GP
 
 #####Tenmq uye trovar ir ler diteramente
-VDout ='/pesq/dados/bam/paulo.bonatti/Modal_Energetics/Version_4.0/Horizontal_Decomposition/dataout'
+
+VDout ='/pesq/dados/bam/paulo.bonatti/Modal_Energetics/Version_4.0/Vertical_Decomposition/dataout'
 VMout ='/pesq/dados/bam/paulo.bonatti/Modal_Energetics/Version_4.0/Vertical_Modes/dataout'
 dirv40='/home/paulo.bonatti/Modal_Energetics/Version_4.0'
 fig_out   =''
@@ -42,14 +45,13 @@ def arguments(args=None):
 
     parser = argparse.ArgumentParser(
         description=(
-        " Plots the Total Energy of the Horizontal Modes the Classes 0 to 4\n\n"
+        " Plots the Energy Anomaly of the Vertical Modes Classes 0 to 4\n\n"
         "Usage:\n"
-        "  totalv  [wv] [cs] [caso] [epoca] [csst] [area] [perc] [xsec] [cnt]\n\n"
+        "  totalv  [cs] [caso] [epoca] [csst] [area] [perc] [xsec] [cnt]\n\n"
         "Default:\n"
-        "  wv=rb; cs=0 ; caso=ERA_5 ; epoca=37 ; csst=RainRS \n"
+        "  cs=0 ; caso=ERA_5 ; epoca=37 ; csst=RainRS \n"
         "  area=local ; perc=Perc ; xsec=no ; cnt=0\n\n"
         "Arguments meaning:\n"
-        "  wv    : horizontal mode (rb, kv, mx, gw or ge)\n"
         "  cs    : vertical mode (0, 1, 2, 3 or 4)\n"
         "  caso  : five letters identifying the case\n"
         "  epoca : number identifying the datei and datef\n"
@@ -65,7 +67,6 @@ def arguments(args=None):
 
     # Default values
     defaults = {
-        "wv"   : 'rb',
         "cs"   : 0,
         "caso" : "ERA_5",
         "epoca": 37,
@@ -77,6 +78,7 @@ def arguments(args=None):
         "color": 'ocean_r',
         "show" : True,
         "bcolor" : [],
+        "units" : '',
         "fmt"  : '.1f',
     }
 
@@ -94,7 +96,6 @@ def arguments(args=None):
     if not args:
         return defaults
 
-    wv   =CD.trying(args,defaults,'wv')
     cs   =CD.trying(args,defaults,'cs')
     caso =CD.trying(args,defaults,'caso')
     epoca=CD.trying(args,defaults,'epoca')
@@ -106,6 +107,7 @@ def arguments(args=None):
     color=CD.trying(args,defaults,'color')
     bcolor=CD.trying(args,defaults,'bcolor')
     show =CD.trying(args,defaults,'show')
+    units=CD.trying(args,defaults,'units')
     fmt  =CD.trying(args,defaults,'fmt')
 
 
@@ -115,7 +117,7 @@ def arguments(args=None):
 
     # Print parsed values (like `say` in GrADS)
     # Print parsed values (like `say` in GrADS)
-    print('wv=',wv , 'cs=',cs ,'caso=',caso, 'epoca=',epoca, 'csst=',csst, 'area=',area, 'perc=',perc, 'xsec=',xsec, 'cnt=',cnt)
+    print('cs=',cs ,'caso=',caso, 'epoca=',epoca, 'csst=',csst, 'area=',area, 'perc=',perc, 'xsec=',xsec, 'cnt=',cnt)
 
     # Placeholder for chkmdls()
     rec = chkmdls()
@@ -127,9 +129,16 @@ def arguments(args=None):
     Kmax = 37
     print(f"Mmax = {Mmax}, Kmax = {Kmax}")
 
-    
-    #*Getting dates
-    #'run ../../Config/Case_Dates.gs 'caso' 'epoca' 'csst
+    ########################################
+    if (csst=='RainRS'):
+        csstc='ClimRS'
+    if (csst=='RainSS'):
+        csstc='ClimSS'
+    if (caso=='MONAN' or caso=='MONOP'):
+        epocac=1
+    else:
+        epocac=2
+
     arg_cs={'caso':caso,
          'epoca':epoca,
          'csst':csst,
@@ -139,6 +148,16 @@ def arguments(args=None):
     csd=CD.csdata(arg_cs)
 
     zca, zcb = csd.zmap[cs]
+
+    arg_csc={'caso':caso,
+         'epoca':epocac,
+         'csst':csstc,
+         'dirv40':dirv40
+        }
+
+    csdc=CD.csdata(arg_csc)
+
+    zcac, zcbc = csdc.zmap[cs]
     ######################################
 
     rh =RB.get_Rhomb_Resol(args={'Mmax':Mmax,'resdir':1})
@@ -153,52 +172,76 @@ def arguments(args=None):
 
     #Get AREA HIGHLIGHT
     ah=AH.get_area_highlight(args_ah)
-    print(ah)
+    #print(ah)
 
+    ########################################3
     xsec='yes'
     if (xsec=='yes'): 
 
         #Get Cross Section 
         crs=CS.get_cross_section(args={'csst':csst})
-        print(crs)
+        #print(crs)
 
-    #time
-    now = datetime.now()
-    dateg = now.strftime("%Y%m%d%H")   # like "202510011530"
-    #print("dateg =", dateg)
-    ################
+    
+    ########################################
+    filea='ENEC'+caso+csst+csd.datei+csd.datef+csd.prev+trunc+'.ctl'
+    fileb='ENECERA_5'+csstc+csdc.datei+csdc.datef+'P.icn.'+trunc+'.ctl'
+    fileh='Vertical_Functions_'+csd.csvm+'.L0'+str(Kmax)+'.ctl'
+
+    exp_name=''
+    filea=VDout+'/'+filea
+    v1 = down.open_grads(filea,exp_name)
+    
+    exp_name=''
+    fileb=VDout+'/'+fileb
+    v2 = down.open_grads(fileb,exp_name)
+
+    exp_name=''
+    fileh=VMout+'/'+fileh
+    v3 = down.open_grads(fileh,exp_name)
+
+    #print(" cnt = ",cnt)
+    #if (cnt > 0): 
+    et1=getattr(v1,f"etn{cs}")
+    et2=getattr(v2,f"etn{cs}")
+    #print(np.min(et1).values)
+    #print(np.min(et2).values)
+
+    ett=(et1.isel(time=0).values-et2.isel(time=0).values)/1000.0
+
+    # Create a new DataArray with the same coords as et1
+    ett_da = xr.DataArray(
+        ett,
+        dims=('lat', 'lon'),
+        coords={'lat': et1.lat, 'lon': et1.lon},
+        attrs={'comment': 'Difference et1 - et2 [m2/s2]'}
+    )
+
+
+    ########################################
+
+    date_format = '%H%d%Y%b'
+
+    # Works for int, numpy.int64, or numpy.datetime64
+    date_py = pd.to_datetime(v1.time[0].values)
+    datez = date_py.strftime(date_format).upper()
 
     tr ='Case Study:'+csst+ah.Center+'-'+trunc
-    tit='Data for '+dateg
-    
+    tit=datez+' Minus April Monthly Mean'
+
     if (caso=='ERA_5'):
-        titb='Analysis: '#+tit
+        titb='Analysis: '+tit
     else:
-        titb='3 Days Forecast: '#+tit
+        titb='3 Days Forecast: '+tit
     
-    
-    filea='ENCL'+caso+csst+csd.datei+csd.datef+csd.prev+trunc+'.ctl'
-    fileh='Vertical_Functions_'+caso+'.L0'+str(Kmax)+'.ctl'
-
-    lats=[float(ah.LatS),float(ah.LatN),6]#float(ah.LatC)]
-    lons=[float(ah.LonW),float(ah.LonE),6]#float(ah.LonC)]
-
-    exp_name='Horizontal_Decomposition'
-    fileg=VDout+'/'+filea
-    vd = down.open_grads(fileg,exp_name)
-
-    #print(vd.variables)
-    #exit()
-
-    
-    exp_name='Horizontal_Modes'
-    fileg=VMout+'/'+fileh
-    vm = down.open_grads(fileg,exp_name)
-
-    #print(vm.variables)
-
+    #########################################
 
     zmap=csd.zmap[cs]
+
+    ha=GP.gethn(zmap[0],v3)
+    hb=GP.gethn(zmap[1],v3)
+    za=int(zmap[0])-1
+    zb=int(zmap[1])-1
 
     if bcolor:
         b1=bcolor[0]
@@ -209,61 +252,23 @@ def arguments(args=None):
         b2=np.max(var[:])
         bn=5
 
+    lats=[float(ah.LatS),float(ah.LatN),6]#float(ah.LatC)]
+    lons=[float(ah.LonW),float(ah.LonE),6]#float(ah.LonC)]
 
     levels= np.linspace(b1,b2,bn,endpoint=True)
     dco=levels[1]-levels[0]
 
-    ha=GP.gethn(zmap[0],vm)
-    hb=GP.gethn(zmap[1],vm)
-    za=int(zmap[0])-1
-    zb=int(zmap[1])-1
+    ####################################################33
 
-    wave_map = {
-    'rb': 'Rossby',
-    'kv': 'Kelvin',
-    'mx': 'Mixed',
-    'gw': 'GravW',
-    'ge': 'GravE'
-    }
-    
-    Wave = wave_map.get(wv, 'Unknown')
+    label=f"{caso} Vertical Energy Class {cs} : H{za}={ha} to H{zb}={hb}\n{titb}"
 
-    var= getattr(vd,f"et{wv}{wv}{cs}")
+    name='Energy_Class'+str(cs)+'_Anom_'+area+'_'+caso+'_'+csst+'_'+datez+'_'+trunc
 
-    if perc=="Perc":
+    tr='Case Study : '+csst+ah.Center+'-'+trunc  
 
-        fga   ='Ener_Perc'
-        tita  =Wave+' Horizontal Energy Percentage'
-        label =f"{caso} {tita}\n Class {cs}: H{za}={ha} to H{zb}={hb}"
-        name  =f"{fga}_Class_{cs}_{Wave}_Total_{area}_{caso}_{csst}_{dateg}_{trunc}"
-    
-        ett=0
-        for i in range(0,5):
+    ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units}\n {tr}"
 
-            ets=getattr(vd,f"etnsum{i}")
-            ett=ets+ett
-
-        var=100*var/ett
-
-        units='[%]'
-
-        ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units}"
-        
-        ma.countour_plot(var,lat=lats,lon=lons,color=color,bcolor=bcolor,units=units,figname=name,plotname=label ,xtitle=ct , show=show)
-        
-    else:
-        fga   ='Energy'
-        etw   = var/1000
-        tita  =Wave+' Horizontal Energy '
-        label =f"{caso} {tita} \n Class {cs}: H{za}={ha} to H {zb}={hb}"
-        name  =f"{fga}_Class_{cs}_{Wave}_Total_{area}_{caso}_{csst}_{dateg}_{trunc}"
-
-        units='[kJ/kg]'
-
-        ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:{fmt}} {units}"
-        
-        ma.countour_plot(var/1000.0,lat=lats,lon=lons,color=color,bcolor=bcolor,units=units,figname=name,plotname=label ,xtitle=ct , show=show,fmt=fmt)
-        
+    ma.countour_plot(ett_da,lat=lats,lon=lons,color=color,bcolor=bcolor,units=units,figname=name,plotname=label ,xtitle=ct , show=show,fmt=fmt)
      
     out=SimpleNamespace(
         cs   =str(cs),
