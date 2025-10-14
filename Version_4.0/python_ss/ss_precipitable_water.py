@@ -54,45 +54,39 @@ lons=[lonw+360,lone+360,6]
 #Dados MONAN
 prec=[
       pr.era5,
-      pr.gpcp,
       pr.bam,
       ]
 
 ####################################################
 #Variveis a comparara para cada experimento
 vars  =[ 
-             ['prec'],
-             ['precip'],
-             ['prec'],
+             ['agpl'],
+             ['agpl'],
             ]
 
 ####################################################
 #Nome para salval figura
 #Ao nome é adicionado a variavel correspondente. 
 #Nome da figura 
-name  = 'accomulated_precipitation_'
+name  = 'mean_precipitable_water_'
 
 ####################################################
 #Fator de multiplicacao para cada variavel.
 #
 var2  =   [[1],[1],[1],[1]]
 
-acomm=fnc.accomulate(prec,vars,dates,var2=var2,lats=lats,lons=lons)
+mean=fnc.mean(prec,vars,dates,var2=var2,lats=lats,lons=lons)
 
-
-label = f"ERA5 Accumulated Precipitation, \n Analysis: from 00Z16FEB2023 to 00Z20FEB2023"
-bcolor=[0,150,6]
+bcolor=[0,60,6]
 levels= np.linspace(bcolor[0],bcolor[1],bcolor[2],endpoint=True)
 dco=levels[1]-levels[0]
 xlabel= f"São Sebastião - Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f}"
-ma.cartopy_plot(acomm[0],bcolor=bcolor,color=color,units='[mm]',figname=name+'era5',plotname=label , show=True,xtitle=xlabel)
 
+label = f"ERA5  Mean Precipitable Water, \n Analysis: from 00Z16FEB2023 to 00Z20FEB2023"
+ma.cartopy_plot(mean[0],bcolor=bcolor,color=color,units='[kgm$^{-2}$]',figname=name+'era5'  ,plotname=label , show=False,xtitle=xlabel)
 
-label = f"GPCP Accumulated Precipitation, \n  3 Days Forecast from 00Z16FEB2023 to 00Z20FEB2023"
-ma.cartopy_plot(acomm[1],bcolor=bcolor,color=color,units='[mm]',figname=name+'gpcp', plotname=label , show=True,xtitle=xlabel)
-
-label = f"BAMHY Accumulated Precipitation, \n 3 Days Forecast from 00Z16FEB2023 to 00Z20FEB2023"
-ma.cartopy_plot(acomm[2],bcolor=bcolor,color=color,units='[mm]',figname=name+'bam' , plotname=label , show=True,xtitle=xlabel)
+label = f"BAMHY Mean Precipitable Water, \n 3 Days Forecast from 00Z16FEB2023 to 00Z20FEB2023"
+ma.cartopy_plot(mean[1],bcolor=bcolor,color=color,units='[kgm$^{-2}$]',figname=name+'bam'   ,plotname=label , show=False,xtitle=xlabel)
 
 plt.show()
 
