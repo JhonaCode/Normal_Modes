@@ -1,0 +1,7 @@
+lt pk1=1000 pk2=750 pmax=1000 pmin=700 start_idx=1 end_idx=11 nlev=11
+mt pk1=700 pk2=450 pmax=700 pmin=400 start_idx=12 end_idx=17 nlev=6
+ut pk1=400 pk2=225 pmax=400 pmin=200 start_idx=18 end_idx=22 nlev=5
+st pk1=200 pk2=2 pmax=200 pmin=1.0 start_idx=23 end_idx=36 nlev=14
+bt pk1=1000 pk2=450 pmax=1000 pmin=400 start_idx=1 end_idx=17 nlev=17
+ct pk1=700 pk2=200 pmax=700 pmin=200 start_idx=12 end_idx=23 nlev=12
+ht pk1=350 pk2=100 pmax=400 pmin=100 start_idx=19 end_idx=27 nlev=9
