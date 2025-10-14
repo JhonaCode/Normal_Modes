@@ -1,7 +1,9 @@
+# -*- coding: utf-8 -*-
 #####################3
 import  argparse
 import  subprocess
 import  numpy as np
+import  pandas as pd
 from    types import SimpleNamespace
 #to get time
 from    datetime import datetime
@@ -75,6 +77,7 @@ def arguments(args=None):
         "color": 'ocean_r',
         "show" : True,
         "bcolor" : [],
+        "fmt"   : '.1f'
     }
 
     """
@@ -102,6 +105,7 @@ def arguments(args=None):
     color=CD.trying(args,defaults,'color')
     bcolor=CD.trying(args,defaults,'bcolor')
     show =CD.trying(args,defaults,'show')
+    fmt  =CD.trying(args,defaults,'fmt')
 
 
     # GrADS logic: if perc != 'Perc', force Ener
@@ -162,13 +166,6 @@ def arguments(args=None):
     #print("dateg =", dateg)
     ################
 
-    tr ='Case Study:'+csst+ah.Center+'-'+trunc
-    tit='Data for '+dateg
-    
-    if (caso=='ERA_5'):
-        titb='Analysis: '#+tit
-    else:
-        titb='3 Days Forecast: '#+tit
     
     filea='ENEC'+caso+csst+csd.datei+csd.datef+csd.prev+trunc+'.ctl'
     fileh='Vertical_Functions_'+caso+'.L0'+str(Kmax)+'.ctl'
@@ -206,18 +203,44 @@ def arguments(args=None):
   
     var=getattr(vd,f"etn{cs}")
 
+    
+    #######################################
+    #date_format = '%H%d%Y%b'
+    date_format = '%b%Y'
+
+    # Works for int, numpy.int64, or numpy.datetime64
+    date_py = pd.to_datetime(vd.time[0].values)
+    datez = date_py.strftime(date_format).upper()
+
+    if csst=='RainSS' or csst=='ClimSS':
+        cssts='Sao Sebastiao'
+
+    if csst=='RainRS' or csst=='ClimRS':
+        cssts='Rio Grande do Sul'
+
+    #tr ='Case Study:'+cssts+'-'+trunc
+    tr =cssts+'-'+trunc
+    
+    if (caso=='ERA_5'):
+        titb='Analysis: '
+    else:
+        titb='3 Days Forecast: '
+
+    titb  = f"Montly Mean {datez}"
+
     if perc=="Perc":
 
         fga   ='Ener_Perc'
         var   = var/vd.ett*100
         tita  ='Vertical Energy Percentage'
         #label =f"{caso} {tita}\n {titb} \n Class {cs}: H{za}={ha} to H {zb}={hb}"
-        label =f"{caso} {tita}\n Class {cs}: H{za}={ha} to H{zb}={hb}"
-        name  =f"{fga}_Class_{cs}_Total_{area}_{caso}_{csst}_{dateg}_{trunc}"
+        #label =f"{caso} {tita}\n Class {cs}: H{za}={ha} to H{zb}={hb}"
+        label  =f"{caso} {tita} Class{cs}: H{za}={ha} to H{zb}={hb}\n {titb}-{tr}"
+        name  =f"{fga}_Class_{cs}_Total_{area}_{caso}_{csst}_{datez}_{trunc}"
 
         units='[%]'
 
-        ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units}"
+        ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units} "
         
         #ma.cartopy_plot(var,lat=lats,lon=lons,color=color,bcolor=bcolor,units='[%]',figname=name,plotname=label  , show=show)
         ma.countour_plot(var,lat=lats,lon=lons,color=color,bcolor=bcolor,units=units,figname=name,plotname=label ,xtitle=ct , show=show)
@@ -227,12 +250,12 @@ def arguments(args=None):
         var   = var/1000
         tita  ='Vertical Energy'
         #label =f"{caso} {tita}\n {titb} \n Class {cs}: H{za}={ha} to H {zb}={hb}"
-        label =f"{caso} {tita} \n Class {cs}: H{za}={ha} to H {zb}={hb}"
-        name  =f"{fga}_Class_{cs}_Total_{area}_{caso}_{csst}_{dateg}_{trunc}"
+        label =f"{caso} {tita} Class{cs}: H{za}={ha} to H{zb}={hb}\n {titb}"
+        name  =f"{fga}_Class_{cs}_Total_{area}_{caso}_{csst}_{datez}_{trunc}"
 
         units='[kJ/kg]'
 
-        ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units}"
+        ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units}-{tr}"
         
         ma.countour_plot(var,lat=lats,lon=lons,color=color,bcolor=bcolor,units=units,figname=name,plotname=label ,xtitle=ct , show=show)
         
@@ -266,7 +289,6 @@ def arguments(args=None):
         fileh=fileh,
         filea=filea,
         titb=titb,
-        tit=tit
         )
 
     #return {

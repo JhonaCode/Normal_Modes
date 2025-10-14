@@ -215,7 +215,7 @@ def totalhvint(args=None):
     Wave2 = wave_map.get(wb, 'Unknown')
 
     cas=wa+'_C'+ca+'_'+wb+'_C'+cb
-    CAS=Wave1+'_C'+ca+'_'+Wave2+'_C'+cb
+    CAS=Wave1+'_C'+ca+'-'+Wave2+'_C'+cb
     print('cas=',cas)
 
     date_format = '%Y%m%d%H'
@@ -226,7 +226,6 @@ def totalhvint(args=None):
     dateiz=datetime.strftime(dateit, date_format)
     datefz=datetime.strftime(dateft, date_format)
     date_format = '%HZ%d%b%Y'
-
 
     ############################################################    
 
@@ -260,7 +259,6 @@ def totalhvint(args=None):
         tita    =f"Hor-Ver Int. Percentage" 
         fga     ='Energy_Int_Perc'
         units   ='[%]'
-        ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:{fmt}} {units}"
         suma=0
         for i in range(0,5): 
             print(f'ewv{i}')
@@ -272,10 +270,9 @@ def totalhvint(args=None):
         etca    =100*et.sum(dim="lev")/suma
         #etca    =100*tosum.etc1.sum(dim="lev")/suma
     else:
-        tita    =f"Hor-Ver Energy Int." 
+        tita    =f"Hor-Ver Energy Interation" 
         fga='Energy_Interaction'
         units='[kJ/kg]'
-        ct=f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units}"
         et=getattr(tosum,f'e{var}')
         etca=et.sum(dim="lev")/1000.0
 
@@ -293,20 +290,36 @@ def totalhvint(args=None):
     #dateg = pd.to_datetime(dateg.values).strftime("%Y%m%d%H")
     #print(dateg)
 
-    tr ='Case Study:'+csst+ah.Center+'-'+trunc
-    tit='Data for '+dateg
+    #######################################
+    #date_format = '%H%d%Y%b'
+    date_format = '%b%Y'
+
+    # Works for int, numpy.int64, or numpy.datetime64
+    date_py = pd.to_datetime(vd.time[0].values)
+    datez = date_py.strftime(date_format).upper()
+
+    if csst=='RainSS' or csst=='ClimSS':
+        cssts='Sao Sebastiao'
+
+    if csst=='RainRS' or csst=='ClimRS':
+        cssts='Rio Grande do Sul'
+
+    #tr ='Case Study:'+cssts+'-'+trunc
+    tr =cssts+'-'+trunc
     
     if (caso=='ERA_5'):
-        titb='Analysis: '#+tit
+        titb='Analysis: '
     else:
-        titb='3 Days Forecast: '#+tit
+        titb='3 Days Forecast: '
 
+    titb  = f"Montly Mean {datez}"
 
-    #tita=f"{tita}\n {titb} Levels:{pfa:.1f}-{pfb:.1f} hPa \nClass {ca}:H{na}={ha} to H{nb}={hb}\nClass {cb}:H{nc}={hc} to H{nd}={hd}"
-    tita=f"{caso} {tita} {CAS}\n Levels:{pfa:.1f}-{pfb:.1f} hPa "
+    ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:{fmt}} {units}"
+
     lclas=f"C{ca}:H{na}={ha} to H{nb}={hb}, C{cb}:H{nc}={hc} to H{nd}={hd}"
-    label=f"{fga}_{cas}_{atm}_{caso}_{csst}_{dateg}_{trunc}"
-    xlabel=f"{lclas}\n{ct}"
+    tita=f"{caso} {tita} {CAS}\n {lclas} "
+    label=f"{fga}_{cas}_{atm}_{caso}_{csst}_{datez}_{trunc}"
+    xlabel=f"Levels:{pfa:.1f}-{pfb:.1f}[hPa]-{titb}\n {ct}-{tr}"
 
     lats=[float(ah.LatS),float(ah.LatN),6]
     lons=[float(ah.LonW),float(ah.LonE),6]

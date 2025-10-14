@@ -224,6 +224,37 @@ def anomrc(args=None):
     v4r = down.open_grads(fileg,exp_name)
     v4  = v4r.sel(lev=lev) 
 
+    #######################################
+    #date_format = '%H%d%Y%b'
+    date_format = '%b%Y'
+
+    # Works for int, numpy.int64, or numpy.datetime64
+    date_py = pd.to_datetime(v1.time[0].values)
+    datez = date_py.strftime(date_format).upper()
+
+    date2_format = '%HZ%d%b%Y'
+
+    date2_py = pd.to_datetime(v2.time[0].values)
+    date2z = date_py.strftime(date2_format).upper()
+
+
+    if csst=='RainSS' or csst=='ClimSS':
+        cssts='Sao Sebastiao'
+
+    if csst=='RainRS' or csst=='ClimRS':
+        cssts='Rio Grande do Sul'
+
+    #tr ='Case Study:'+cssts+'-'+trunc
+    tr =cssts+'-'+trunc #{Center}
+    
+    titd  = f" {date2z} minus {datez} "
+
+    if (caso=='ERA_5'):
+        titb='Analysis: '+titd
+    else:
+        titb='3 Days Forecast: '+titd
+
+
     if (cx=='RS'):
         htt=v1.hrb+v2.hkv+v2.hmx
         utt=v1.urb+v2.ukv+v2.umx
@@ -287,10 +318,10 @@ def anomrc(args=None):
     #tcs = 'Date: ' if cf == 'Rain' else tcs
 
 
-    tita= f"{caso} {csst}\n Wind and Geopotential Height Anomaly Level={lev} [hPa]" 
-    xlabel= f"{ct} - {cx}: {Center}"
+    tita= f"{caso} {csst} Wind and Geopotential Height Anomaly \n {titb} for Level {lev} [hPa]" 
+    xlabel= f"{ct} - {tr} \n {xla} {xlb}"
 
-    figname=f"Wind_Geop_Height_Triplet_{fg}_Anom_{caso}_{csst}_{dateg}_{lev}_hPa"
+    figname=f"Wind_Geop_Height_Triplet_{fg}_Anom_{caso}_{csst}_{date2z}_{lev}_hPa"
 
 
     ma.cartopy_vector(utt,vtt,v1,data2=htt,scale=scale, width=width,lat=lats,lon=lons,color=color,bcolor=bcolor,figname=figname,plotname=tita,magwind=magwind,xtitle=xlabel ,cbar=False ,units=units, show=show,fmt=fmt,headlength=headlength,save=True)

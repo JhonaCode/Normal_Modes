@@ -212,6 +212,7 @@ def totalrc(args=None):
     dco=levels[1]-levels[0]
 
     units='[hpa]'
+
     ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:{fmt}} {units}"
 
     ha='9746.3'
@@ -234,21 +235,41 @@ def totalrc(args=None):
         fg='RbS4C0_KvS1C1'
         Center='(45.8W,23.6S)'
     
-    cf=csst[0:4]
-    tcs = 'Monthly Mean: ' if cf == 'Clim' else tcs
-    tcs = 'Date: ' if cf == 'Rain' else tcs
+    #cf=csst[0:4]
+    #tcs = 'Monthly Mean: ' if cf == 'Clim' else tcs
+    #tcs = 'Date: ' if cf == 'Rain' else tcs
+
+    #######################################
+    #date_format = '%H%d%Y%b'
+    date_format = '%b%Y'
+
+    # Works for int, numpy.int64, or numpy.datetime64
+    date_py = pd.to_datetime(v1.time[0].values)
+    datez = date_py.strftime(date_format).upper()
+
+    if csst=='RainSS' or csst=='ClimSS':
+        cssts='Sao Sebastiao'
+
+    if csst=='RainRS' or csst=='ClimRS':
+        cssts='Rio Grande do Sul'
+
+    #tr ='Case Study:'+cssts+'-'+trunc
+    tr =cssts+'-'+trunc #{Center}
+    
+    if (caso=='ERA_5'):
+        titb='Analysis: '
+    else:
+        titb='3 Days Forecast: '
+
+    titb  = f"Montly Mean {datez}"
 
 
-    tita= f"{caso} {csst}\n Wind and Geopotential Height {tcs} Level={lev} [hPa]" 
-    xlabel= f"{ct} - {cx}: {Center}"
 
-    figname=f"Wind_Geop_Height_Triplet_{fg}_Total_{caso}_{csst}_{dateg}_{lev}_hPa"
+    tita= f"{caso} {cssts} Wind and Geopotential Height \n{titb} for Level={lev} [hPa]" 
+    xlabel= f"{ct} - {tr} \n {xla} {xlb}"
 
-    #print(tita)
-    #print(xlabel)
-    #print(figname)
+    figname=f"Wind_Geop_Height_Triplet_{fg}_Total_{caso}_{csst}_{datez}_{lev}_hPa"
 
-    #ma.countour_plot(htt,lat=lats,lon=lons,color=color,bcolor=bcolor,units=units,figname=figname,xtitle=xlabel,plotname=tita  , show=show,fmt=fmt)
     ma.cartopy_vector(utt,vtt,v1,data2=htt,scale=scale, width=width,lat=lats,lon=lons,color=color,bcolor=bcolor,figname=figname,plotname=tita,magwind=magwind,xtitle=xlabel ,cbar=False ,units=units, show=show,fmt=fmt,headlength=headlength,save=True)
 
 

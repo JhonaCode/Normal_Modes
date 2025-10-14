@@ -3,6 +3,7 @@ import  argparse
 import  subprocess
 import  numpy as np
 from    types import SimpleNamespace
+import  pandas as pd
 #to get time
 from    datetime import datetime
 # Function with the definition of differents projetions
@@ -75,6 +76,8 @@ def arguments(args=None):
         "area" : "local",
         "perc" : "Perc",
         "xsec" : "no",
+        "lats" : [],
+        "lons" : [], 
         "cnt"  : 0,
         "color": 'ocean_r',
         "show" : True,
@@ -110,6 +113,8 @@ def arguments(args=None):
     bcolor=CD.trying(args,defaults,'bcolor')
     show =CD.trying(args,defaults,'show')
     fmt  =CD.trying(args,defaults,'fmt')
+    lats =CD.trying(args,defaults,'lats')
+    lons =CD.trying(args,defaults,'lons')
 
 
     # GrADS logic: if perc != 'Perc', force Ener
@@ -165,40 +170,43 @@ def arguments(args=None):
         crs=CS.get_cross_section(args={'csst':csst})
         print(crs)
 
-    #time
-    now = datetime.now()
-    dateg = now.strftime("%Y%m%d%H")   # like "202510011530"
-    #print("dateg =", dateg)
-    ################
-
-    tr ='Case Study:'+csst+ah.Center+'-'+trunc
-    tit='Data for '+dateg
-    
-    if (caso=='ERA_5'):
-        titb='Analysis: '#+tit
-    else:
-        titb='3 Days Forecast: '#+tit
-    
+    ##################################################3
     
     filea='ENCL'+caso+csst+csd.datei+csd.datef+csd.prev+trunc+'.ctl'
     fileh='Vertical_Functions_'+caso+'.L0'+str(Kmax)+'.ctl'
-
-
-    lats=[float(ah.LatS),float(ah.LatN),6]#float(ah.LatC)]
-    lons=[float(ah.LonW),float(ah.LonE),6]#float(ah.LonC)]
 
     exp_name='Horizontal_Decomposition'
     fileg=VDout+'/'+filea
     vd = down.open_grads(fileg,exp_name)
 
-    #print(vd.variables)
-    #exit()
-
     exp_name='Horizontal_Modes'
     fileg=VMout+'/'+fileh
     vm = down.open_grads(fileg,exp_name)
 
-    #print(vm.variables)
+    wave_map = {
+    'rb': 'Rossby',
+    'kv': 'Kelvin',
+    'mx': 'Mixed',
+    'gw': 'GravW',
+    'ge': 'GravE'
+    }
+    
+    Wavea = wave_map.get(wa, 'Unknown')
+    Waveb = wave_map.get(wb, 'Unknown')
+
+    var= getattr(vd,f"et{wa}{wb}{cs}")
+
+    ##############################################
+
+    if lats:
+        lats=lats#float(ah.LatC)]
+    else:
+        lats=[float(ah.LatS),float(ah.LatN),6]#float(ah.LatC)]
+
+    if lons:
+        lons=lons
+    else:
+        lons=[float(ah.LonW),float(ah.LonE),6]#float(ah.LonC)]
 
 
     zmap=csd.zmap[cs]
@@ -220,25 +228,37 @@ def arguments(args=None):
     za=int(zmap[0])-1
     zb=int(zmap[1])-1
 
-    wave_map = {
-    'rb': 'Rossby',
-    'kv': 'Kelvin',
-    'mx': 'Mixed',
-    'gw': 'GravW',
-    'ge': 'GravE'
-    }
-    
-    Wavea = wave_map.get(wa, 'Unknown')
-    Waveb = wave_map.get(wb, 'Unknown')
+    ##################################################3
+    #date_format = '%H%d%Y%b'
+    date_format = '%b%Y'
 
-    var= getattr(vd,f"et{wa}{wb}{cs}")
+    # Works for int, numpy.int64, or numpy.datetime64
+    date_py = pd.to_datetime(vd.time[0].values)
+    datez = date_py.strftime(date_format).upper()
+
+    if csst=='RainSS' or csst=='ClimSS':
+        cssts='Sao Sebastiao'
+
+    if csst=='RainRS' or csst=='ClimRS':
+        cssts='Rio Grande do Sul'
+
+    #tr ='Case Study:'+cssts+'-'+trunc
+    tr =cssts+'-'+trunc
+    
+    if (caso=='ERA_5'):
+        titb='Analysis: '
+    else:
+        titb='3 Days Forecast: '
+
+    titb  = f"Montly Mean {datez}"
+
 
     if perc=="Perc":
 
         fga   ='Ener_Perc'
-        tita  =Wavea+'-'+Waveb+' Horizontal Energy Percentage'
-        label =f"{caso} {tita}\n Class {cs}: H{za}={ha} to H{zb}={hb}"
-        name  =f"{fga}_Class_{cs}_{wa}_{wb}_Total_{area}_{caso}_{csst}_{dateg}_{trunc}"
+        tita  =Wavea+'-'+Waveb+' Horizontal Energy Iter. Percentage'
+        label =f"{caso} {tita}\n Class {cs}: H{za}={ha} to H{zb}={hb}\n {titb}"
+        name  =f"{fga}_Class_{cs}_{wa}_{wb}_Total_{area}_{caso}_{csst}_{datez}_{trunc}"
     
         ett=0
         for i in range(0,5):
@@ -250,20 +270,20 @@ def arguments(args=None):
 
         units='[%]'
 
-        ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units}"
+        ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units} {tr}"
         
         ma.countour_plot(var,lat=lats,lon=lons,color=color,bcolor=bcolor,units=units,figname=name,plotname=label ,xtitle=ct , show=show)
         
     else:
         fga   ='Energy'
         etw   =var/1000
-        tita  =Wavea+'-'+Waveb+' Horizontal Energy'
-        label =f"{caso} {tita} \n Class {cs}: H{za}={ha} to H {zb}={hb}"
-        name  =f"{fga}_Class_{cs}_{wa}_{wb}_Total_{area}_{caso}_{csst}_{dateg}_{trunc}"
+        tita  =Wavea+'-'+Waveb+' Horizontal Energy Iteration'
+        label =f"{caso} {tita} \n Class {cs}: H{za}={ha} to H {zb}={hb}\n {titb}"
+        name  =f"{fga}_Class_{cs}_{wa}_{wb}_Total_{area}_{caso}_{csst}_{datez}_{trunc}"
 
         units='[kJ/kg]'
 
-        ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:{fmt}} {units}"
+        ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:{fmt}} {units} {tr}"
         
         ma.countour_plot(var/1000.0,lat=lats,lon=lons,color=color,bcolor=bcolor,units=units,figname=name,plotname=label ,xtitle=ct , show=show,fmt=fmt)
         
@@ -289,8 +309,6 @@ def arguments(args=None):
         lons=lons,
         fileh=fileh,
         filea=filea,
-        titb=titb,
-        tit=tit
         )
 
     return out

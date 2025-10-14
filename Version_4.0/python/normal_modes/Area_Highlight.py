@@ -41,8 +41,8 @@ def get_area_highlight(args):
         if (csst=='RainSS' or csst=='ClimSS'):
             LonW=0.0 
             LonE=360.0
-            LatS=-90.0  
-            LatN=5.0
+            LatS=-60.0  
+            LatN=30.0
             LonC=-45.75 
             LatC=-23.5955
             Center='(45.8W,23.6S)'

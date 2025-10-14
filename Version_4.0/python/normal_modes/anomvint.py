@@ -279,31 +279,47 @@ def arguments(args=None):
 
 
     ####################################
-    date_format = '%H%d%Y%b'
+    date_format = '%b%Y'
 
     # Works for int, numpy.int64, or numpy.datetime64
     date_py = pd.to_datetime(v1.time[0].values)
     datez = date_py.strftime(date_format).upper()
 
-    tr ='Case Study:'+csst+ah.Center+'-'+trunc
+    date2_format = '%HZ%d%b%Y'
 
-    ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units}\n {tr}"
+    date2_py = pd.to_datetime(v2.time[0].values)
+    date2z = date_py.strftime(date2_format).upper()
 
-    tita=f"Vertical Energy Interaction C{ca} C{cb}"
+    if csst=='RainSS' or csst=='ClimSS':
+        cssts='Sao Sebastiao'
 
-    tit=datez+' Minus April Monthly Mean'
+    if csst=='RainRS' or csst=='ClimRS':
+        cssts='Rio Grande do Sul'
+
+    #tr =csssts+csst+ah.Center+'-'+trunc
+    tr =cssts+'-'+trunc
+
+    #tit=datez+f" Minus {datez[]} Monthly Mean"
+    tit  = f" {date2z} minus Monthly Mean {datez} "
+
+    tita=f"Vertical Energy Interaction C{ca} C{cb}" 
+
     if (caso=='ERA_5'):
         titb='Analysis: '+tit
     else:
         titb='3 Days Forecast: '+tit
 
     fga='EnerInt_C'
+
+    ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units} - {tr}"
     
     ####################################
 
     tita=f"{caso} {tita}-Levels:{pfa:.1f}-{pfb:.1f} hPa \nClass{ca}:H{na}={ha} to H{nb}={hb} - Class{cb}:H{nc}={hc} to H{nd}={hd}\n{titb} "
-    label=f"{fga}_C{ca}_C{cb}_Total_{area}_{atm}_{caso}_{csst}_{datez}_{trunc}"
-    xlabel=f"{ct}"
+    label=f"{fga}_C{ca}_C{cb}_Total_{area}_{atm}_{caso}_{csst}_{date2z}_{trunc}"
+    xlabel=ct
+
+
 
 
     ma.countour_plot(etca_da,lat=lats,lon=lons,color=color,bcolor=bcolor,units=units,figname=label,xtitle=xlabel,plotname=tita  , show=show)

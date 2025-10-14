@@ -257,14 +257,28 @@ def arguments(args=None):
 
 
     #######################################
-    date_format = '%H%d%Y%b'
+    date_format = '%b%Y'
 
     # Works for int, numpy.int64, or numpy.datetime64
     date_py = pd.to_datetime(v1.time[0].values)
     datez = date_py.strftime(date_format).upper()
 
-    tr ='Case Study:'+csst+ah.Center+'-'+trunc
-    tit=datez+' Minus April Monthly Mean'
+    date2_format = '%HZ%d%b%Y'
+
+    date2_py = pd.to_datetime(v2.time[0].values)
+    date2z = date_py.strftime(date2_format).upper()
+
+    if csst=='RainSS' or csst=='ClimSS':
+        cssts='Sao Sebastiao'
+
+    if csst=='RainRS' or csst=='ClimRS':
+        cssts='Rio Grande do Sul'
+
+    #tr =csssts+csst+ah.Center+'-'+trunc
+    tr =cssts+'-'+trunc
+    #tr='Case Study : '+csst+ah.Center+'-'+trunc  
+    #tit=datez+' Minus April Monthly Mean'
+    tit  = f" {date2z} minus Monthly Mean {datez} "
 
     if (caso=='ERA_5'):
         titb='Analysis: '+tit
@@ -273,13 +287,17 @@ def arguments(args=None):
 
     label=f"{caso} {Wave} Horizontal Energy Class {cs}: H{za}={ha} to H{zb}={hb}\n{titb}"
 
-    name='Energy_C'+str(cs)+Wave+'_Anom_'+area+'_'+caso+'_'+csst+'_'+datez+'_'+trunc
+    name='Energy_C'+str(cs)+Wave+'_Anom_'+area+'_'+caso+'_'+csst+'_'+date2z+'_'+trunc
 
-    tr='Case Study : '+csst+ah.Center+'-'+trunc  
 
-    ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units}\n {tr}"
+    ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units} - {tr}"
 
     ma.countour_plot(ett_da,lat=lats,lon=lons,color=color,bcolor=bcolor,units=units,figname=name,plotname=label ,xtitle=ct , show=show,fmt=fmt)
+
+    print(f"\n\n")
+    print(f"✅ Save Figure name")
+    print(f"✅ {name}")
+    print(f"\n\n")
      
     out=SimpleNamespace(
         cs   =str(cs),

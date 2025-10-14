@@ -178,14 +178,6 @@ def arguments(args=None):
         crs=CS.get_cross_section(args={'csst':csst})
         print(crs)
 
-    ############################################################    
-
-    #time
-    #now = datetime.now()
-    #dateg = now.strftime("%Y%m%d%H")   # like "202510011530"
-    #print("dateg =", dateg)
-    now = datetime.now()
-    dateg = now.strftime("%Y%m%d%H")   # like "202510011530"
 
 
     ############################################################    
@@ -224,7 +216,7 @@ def arguments(args=None):
     dco=levels[1]-levels[0]
 
     if (perc == 'Perc'):
-        tita    ='Vertical Energy Interaction Percentage'
+        tita    =f"Vertical Energy Interaction Percentage C{ca}_C{cb}"
         fga     ='Perc_Int'
         units   ='[%]'
         ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units}"
@@ -239,14 +231,34 @@ def arguments(args=None):
         etca    =100*et.sum(dim="lev")/suma
         #etca    =100*tosum.etc1.sum(dim="lev")/suma
     else:
-        tita='Vertical Energy Interaction'
+        tita=f"Vertical Energy Interaction C{ca}_C{cb}"
         fga='Ener_Int'
         units='[kJ/kg]'
         ct=f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units}"
         et=getattr(tosum,f'etc{ca}{cb}')
         etca=et.sum(dim="lev")/1000.0
 
+    ############################################################    
 
+    #time
+    #now = datetime.now()
+    #dateg = now.strftime("%Y%m%d%H")   # like "202510011530"
+    #print("dateg =", dateg)
+    now = datetime.now()
+    dateg = now.strftime("%Y%m%d%H")   # like "202510011530"
+
+    #date_format = '%H%d%Y%b'
+    date_format = '%b%Y'
+    # Works for int, numpy.int64, or numpy.datetime64
+    date_py = pd.to_datetime(vd.time[0].values)
+    datez = date_py.strftime(date_format).upper()
+
+    ############################################################    
+    lats=[float(ah.LatS),float(ah.LatN),6]
+    lons=[float(ah.LonW),float(ah.LonE),6]
+
+
+    ############################################################    
     ha=GP.gethn(za,vm)
     hb=GP.gethn(zb,vm)
     hc=GP.gethn(zc,vm)
@@ -259,24 +271,31 @@ def arguments(args=None):
     #dateg=vm.time[0]#.values
     #dateg = pd.to_datetime(dateg.values).strftime("%Y%m%d%H")
     #print(dateg)
+    ############################################################    
 
     tr ='Case Study:'+csst+ah.Center+'-'+trunc
     tit='Data for '+dateg
+
+    if csst=='RainSS' or csst=='ClimSS':
+        cssts='Sao Sebastiao'
+
+    if csst=='RainRS' or csst=='ClimRS':
+        cssts='Rio Grande do Sul'
+
+    #tr ='Case Study:'+cssts+'-'+trunc
+    tr =cssts+'-'+trunc
     
     if (caso=='ERA_5'):
-        titb='Analysis: '+tit
+        titb='Analysis: '
     else:
-        titb='3 Days Forecast: '+tit
-    
-    lats=[float(ah.LatS),float(ah.LatN),6]
-    lons=[float(ah.LonW),float(ah.LonE),6]
+        titb='3 Days Forecast: '
+
+    titb  = f"Montly Mean {datez}"
 
 
-    #tita=f"{caso} {tita} \n Levels: {pfa}-{pfb} hPa \n {titb}\n Class {ca}: H {na}={ha} to H{nb}={hb} Class {cb}: H{nc}={hc} to H{nd}={hd}"
-    tita=f"{caso} {tita}, Levels:{pfa:.1f}-{pfb:.1f} hPa \nClass {ca}:H{na}={ha} to H{nb}={hb}\nClass {cb}:H{nc}={hc} to H{nd}={hd}"
-    label=f"{fga}_C{ca}_C{cb}_Total_{area}_{atm}_{caso}_{csst}_{dateg}_{trunc}"
-    #xlabel=f"{ct} {tr}"
-    xlabel=f"{ct}"
+    tita=f"{caso} {tita} - Levels:{pfa:.1f}-{pfb:.1f} hPa \nClass {ca}:H{na}={ha} to H{nb}={hb} Class {cb}:H{nc}={hc} to H{nd}={hd} \n {titb}"
+    label=f"{fga}_C{ca}_C{cb}_Total_{area}_{atm}_{caso}_{csst}_{datez}_{trunc}"
+    xlabel=f"{ct} - {tr}"
 
 
     ma.countour_plot(etca,lat=lats,lon=lons,color=color,bcolor=bcolor,units=units,figname=label,xtitle=xlabel,plotname=tita  , show=show)

@@ -79,6 +79,8 @@ def arguments(args=None):
         "show" : True,
         "bcolor" : [],
         "units" : '',
+        "lats" : [],
+        "lons" : [], 
         "fmt"  : '.1f',
     }
 
@@ -109,6 +111,8 @@ def arguments(args=None):
     show =CD.trying(args,defaults,'show')
     units=CD.trying(args,defaults,'units')
     fmt  =CD.trying(args,defaults,'fmt')
+    lats =CD.trying(args,defaults,'lats')
+    lons =CD.trying(args,defaults,'lons')
 
 
     # GrADS logic: if perc != 'Perc', force Ener
@@ -220,14 +224,27 @@ def arguments(args=None):
 
     ########################################
 
-    date_format = '%H%d%Y%b'
+    date_format = '%b%Y'
 
     # Works for int, numpy.int64, or numpy.datetime64
     date_py = pd.to_datetime(v1.time[0].values)
     datez = date_py.strftime(date_format).upper()
 
-    tr ='Case Study:'+csst+ah.Center+'-'+trunc
-    tit=datez+' Minus April Monthly Mean'
+    date2_format = '%HZ%d%b%Y'
+
+    date2_py = pd.to_datetime(v2.time[0].values)
+    date2z = date_py.strftime(date2_format).upper()
+
+    if csst=='RainSS' or csst=='ClimSS':
+        cssts='Sao Sebastiao'
+
+    if csst=='RainRS' or csst=='ClimRS':
+        cssts='Rio Grande do Sul'
+
+    #tr =csssts+csst+ah.Center+'-'+trunc
+    tr =cssts+'-'+trunc
+    #tit=datez+' Minus April Monthly Mean'
+    tit  = f" {date2z} minus Monthly Mean {datez} "
 
     if (caso=='ERA_5'):
         titb='Analysis: '+tit
@@ -252,8 +269,15 @@ def arguments(args=None):
         b2=np.max(var[:])
         bn=5
 
-    lats=[float(ah.LatS),float(ah.LatN),6]#float(ah.LatC)]
-    lons=[float(ah.LonW),float(ah.LonE),6]#float(ah.LonC)]
+    if lats:
+        lats=lats#float(ah.LatC)]
+    else:
+        lats=[float(ah.LatS),float(ah.LatN),6]#float(ah.LatC)]
+
+    if lons:
+        lons=lons
+    else:
+        lons=[float(ah.LonW),float(ah.LonE),6]#float(ah.LonC)]
 
     levels= np.linspace(b1,b2,bn,endpoint=True)
     dco=levels[1]-levels[0]
@@ -262,13 +286,17 @@ def arguments(args=None):
 
     label=f"{caso} Vertical Energy Class {cs} : H{za}={ha} to H{zb}={hb}\n{titb}"
 
-    name='Energy_Class'+str(cs)+'_Anom_'+area+'_'+caso+'_'+csst+'_'+datez+'_'+trunc
+    name='Energy_Class'+str(cs)+'_Anom_'+area+'_'+caso+'_'+csst+'_'+date2z+'_'+trunc
 
-    tr='Case Study : '+csst+ah.Center+'-'+trunc  
-
-    ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units}\n {tr}"
+    ct= f"Contours: {bcolor[0]} to {bcolor[1]} by {dco:.1f} {units} - {tr}"
 
     ma.countour_plot(ett_da,lat=lats,lon=lons,color=color,bcolor=bcolor,units=units,figname=name,plotname=label ,xtitle=ct , show=show,fmt=fmt)
+
+    print(f"\n\n")
+    print(f"✅ Save Figure name")
+    print(f"✅ {name}")
+    print(f"\n\n")
+
      
     out=SimpleNamespace(
         cs   =str(cs),
