@@ -23,6 +23,14 @@ temporal={
           'cmmais' :0.0,
           }
 
+profile={
+          'plotdef':'temporal',
+          'wf'     :0.35,
+          'hf'     :1.5,
+          'cmmais' :0.0,
+          'fontsize':6, 
+          }
+
 egeon='/pesq'
 
 path='/home/jhonatan.aguirre/Modal_Energetics/Version_4.0/document_ss/figs'
