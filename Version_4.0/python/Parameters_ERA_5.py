@@ -23,6 +23,16 @@ fileg=path+'/'+exp+'/'+ctl
 
 prec = down.open_grads(fileg,exp_name)
 
+computer='/pesq'
+exp_name='ERA_5_SS'
+path='%s/dados/bam/paulo.bonatti/Modal_Energetics_Data'%(computer)       
+exp='ERA_5_PrecSS_Sfc'
+ctl='ERA_5_PrecSS_Sfc.ctl'
+
+fileg=path+'/'+exp+'/'+ctl
+
+prec_ss = down.open_grads(fileg,exp_name)
+
 #print(prec.time)
 #prec
 #agcl
