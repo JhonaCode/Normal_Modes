@@ -15,6 +15,7 @@ import normal_modes.Rhomb_Resol    as RB
 import normal_modes.Area_Highlight as AH
 import normal_modes.Cross_Section  as CS
 import normal_modes.Get_Player     as GP
+import matplotlib.pyplot as plt
 
 #####Tenmq uye trovar ir ler diteramente
 VDout ='/pesq/dados/bam/paulo.bonatti/Modal_Energetics/Version_4.0/Horizontal_Decomposition/dataout'
@@ -76,18 +77,24 @@ def temporal(args=None):
     RSC='(45.8W,23.6S)'
     
     # C0_rb_C0_kv_C0_mx:
-    zrb1=1
+    zrb1=0
     zrb2=5
-    zkv1=6
-    zkv2=11
-    zmx1=6
-    zmx2=11
+    zkv1=5
+    zkv2=10
+    zmx1=5
+    zmx2=10
 
     filei='ENEC'+caso+csst+'2023'+'.ctl'
 
     exp_name='Temporal Triplex'
     fileg=VDout+'/'+filei
     vd = down.open_grads(fileg,exp_name)
+
+    #print(fileg)
+    #exit()
+    #print(vd)
+
+    #exit()
 
     if (caso=='ERA_5'):
         tit='Analysis: '
@@ -100,11 +107,15 @@ def temporal(args=None):
     tim  =timei[5::]
     vrgm =450
 
-    point1  = vd.etrbasy.isel(lon=5, lat=3)
-    smrb    = point1.isel(lev=slice(zrb1, zrb2 + 1)).sum(dim='lev')
+    #lat e lon não são, são os modoss e começa do zero!
+    point1  = vd.etrbasy.isel(lon=4, lat=2)
+    #point1  = vd.etrbasy.sel(lon=vd.lon[5].values, lat=vd.lat[3].values)
 
-    point2  = vd.etgesym.isel(lon=2, lat=1)
-    smkv    = point2.isel(lev=slice(zkv1, zkv2 + 1)).sum(dim='lev')
+    smrbx   = point1.isel(lev=slice(zrb1, zrb2 ))
+    smrb    = smrbx.sum(dim='lev')
+
+    point2  = vd.etgesym.isel(lon=1, lat=0)
+    smkv    = point2.isel(lev=slice(zkv1, zkv2)).sum(dim='lev')
     
     total   = smrb+smkv
 
@@ -113,14 +124,16 @@ def temporal(args=None):
     xtitle= 'Time [Days]'
     ytitle= r'Energy [m$^{2}$s$^{-2}$]'
 
-    label   = ['Kv+Rb','Rb Asy s=4 l=3',r'Kv s=1 l=-1',r'$Mx s=1 l=-1',]
+    label   = ['Kv+Rb','Rb Asy s=4 l=4',r'Kv s=1 l=-1',r'$Mx s=1 l=-1',]
 
     
     figname='Energy_Triplet_Mixed_Kelvin_Rossby_'+caso+'_'+csst+'_'+tim
 
 
-    fig,ax=ma.temporal_plot( data=[total,smrb,smkv],
-                            vmulti=[10,10,100,1],
+    fig,ax=ma.temporal_plot( 
+                            data=[total,smrb,smkv],
+                            #data=[smrb],
+                            vmulti=[1,1,1,1],
                             color=['blue','black','red','green'],
                             label=label,ylim=ylim, dates=[timei,timef],
                             title=title,xtitle=xtitle,ytitle=ytitle,                            figname=figname,save=True,

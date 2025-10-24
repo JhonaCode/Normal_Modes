@@ -11,17 +11,20 @@ args={
     "caso": "ERA_5",
     "csst":'RainSS',
     "show" : True,
-    "ylim": [0,350],
+    "ylim": [0,440],
 }
+
+
 
 #To load the appropiated file given the args. 
 fig=tp.temporal(args)
+#exit()
 
 args={
     "caso": "BAMHY",
     "csst":'RainSS',
     "show" : True,
-    "ylim": [0,350],
+    "ylim": [0,440],
 }
 
 #To load the appropiated file given the args. 
