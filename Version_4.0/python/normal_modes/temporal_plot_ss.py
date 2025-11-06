@@ -93,7 +93,6 @@ def temporal(args=None):
     #print(fileg)
     #exit()
     #print(vd)
-
     #exit()
 
     if (caso=='ERA_5'):
